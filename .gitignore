@@ -1,9 +1,4 @@
-lambda-1/lambda.cmi
-lambda-1/lambda.cmo
-lambda-1/lexer.cmi
-lambda-1/lexer.cmo
-lambda-1/main.cmi
-lambda-1/main.cmo
-lambda-1/parser.cmi
-lambda-1/parser.cmo
-lambda-1/top
+*.cmi
+*.cso
+*/top
+.DS_Store
