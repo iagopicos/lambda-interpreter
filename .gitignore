@@ -1,4 +1,4 @@
 *.cmi
-*.cso
+*.cmo
 */top
 .DS_Store
