@@ -105,6 +105,12 @@ let rec subst x s tm = match tm with
   | TmApp (t1, t2) ->
       TmApp (subst x s t1, subst x s t2)
 ;;
+(*
+Terminos de De Bruijn: Una forma de representar terminos de manera independiente de los nombres de las variables.
+Lx.x => L.0; Lx.Ly.x (y x) => L.L.1 (0 1)
+La idea es reemplazar las variables por numeros naturales de manera que cualquier numero es la variable ligada por el enesimo lambda hacia atras.
+Plantea un manejo vas eficiente para aplicar el mecanismo de sustitucion, necesita una funcion auxiliar de desplazamiento(shifting) Apartado opcional de la practica
+*)
 
 let rec isnumericval tm = match tm with
     TmZero -> true
