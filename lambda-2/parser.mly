@@ -18,6 +18,7 @@
 %token LPAREN
 %token RPAREN
 %token DOT
+%token COMA
 %token EQ
 %token EOF
 
@@ -48,7 +49,8 @@ term :
       { TmAbs ($2, $4) }
   | LET STRINGV EQ term IN term
       { TmApp (TmAbs ($2, $6), $4) }
-
+  | appTerm COMA appTerm
+     {TmTuple ($1, $3) }
 appTerm :
     atomicTerm
       { $1 }
