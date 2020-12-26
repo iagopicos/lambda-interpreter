@@ -12,6 +12,11 @@ type term =
   | TmApp of term * term
 ;;
 
+type instruction = 
+    TmAssigment of string * term
+  | TmEvaluation of term
+;;
+ 
 let rec string_of_term = function
     TmTrue ->
       "true"
@@ -40,6 +45,12 @@ let rec string_of_term = function
   | TmApp (t1, t2) ->
       "(" ^ string_of_term t1 ^ " " ^ string_of_term t2 ^ ")"
 ;;
+
+let rec string_of_instruction = function
+  TmAssigment(t1,t2) -> 
+    t1 ^": " ^ string_of_term t2
+ |TmEvaluation t -> 
+   string_of_term t (* The evaluation it's a term so i call to the previous function *)
 
 let rec ldif l1 l2 = match l1 with
     [] -> []
@@ -123,9 +134,12 @@ let rec isval tm = match tm with
 exception NoRuleApplies
 ;;
 
-let rec eval1 tm = match tm with
+let rec eval1 ctx tm = match tm with
+    TmVar key when (Hashtbl.mem ctx key)-> 
+       Hashtbl.find ctx key
+      
     (* E-IfTrue *)
-    TmIf (TmTrue, t2, _) ->
+  |  TmIf (TmTrue, t2, _) ->
       t2
 
     (* E-IfFalse *)
@@ -134,12 +148,12 @@ let rec eval1 tm = match tm with
 
     (* E-If *)
   | TmIf (t1, t2, t3) ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 ctx t1 in
       TmIf (t1', t2, t3)
 
     (* E-Succ *)
   | TmSucc t1 ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 ctx t1 in
       TmSucc t1'
 
     (* E-PredZero *)
@@ -152,7 +166,7 @@ let rec eval1 tm = match tm with
 
     (* E-Pred *)
   | TmPred t1 ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 ctx t1 in
       TmPred t1'
 
     (* E-IszeroZero *)
@@ -165,51 +179,32 @@ let rec eval1 tm = match tm with
 
     (* E-Iszero *)
   | TmIsZero t1 ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 ctx t1 in
       TmIsZero t1'
 
     (* E-AppAbs *)
-  | TmApp(TmAbs(x, t12), v2) when isval v2 ->
+  | TmApp(TmAbs(x, t12), v2) when isval  v2 ->
       subst x v2 t12
 
     (* E-App2: evaluate argument before applying function *)
-  | TmApp(v1, t2) when isval v1 ->
-      let t2' = eval1 t2 in
+  | TmApp(v1, t2) when isval  v1 ->
+      let t2' = eval1 ctx t2 in
       TmApp (v1, t2')
 
     (* E-App1: evaluate function before argument *)
   | TmApp (t1, t2) ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 ctx t1 in
       TmApp (t1', t2)
 
   | _ ->
       raise NoRuleApplies
 ;;
 
-let rec eval tm =
+let rec eval ctx tm =
   try
-    let tm' = eval1 tm in
-    eval tm'
+    let tm' = eval1 ctx tm in
+    eval ctx tm'
   with
     NoRuleApplies -> tm
 ;;
-
-(*
-
-En la versión anterior, cada vez que eval se llama a sí misma (al
-estar la llamada dentro de un try-with) se añade un manejador de dicha
-estructura try-with al stack de llamadas. Por lo tanto, esa
-implementación no es recursiva terminal y, eventualmente, podría
-producir stack overflow.
-
-Una versión mejor, aunque un poco menos legible, podría ser esta:
-
-let rec eval tm =
-  let tm'opt = try Some (eval1 tm) with NoRuleApplies -> None in
-  match tm'opt with
-      Some tm' -> eval tm'
-    | None -> tm
-;;
-
-*)
 

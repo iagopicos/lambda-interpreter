@@ -25,14 +25,20 @@
 %token <string> STRINGV
 
 %start s
-%type <Lambda.term> s
+%type <Lambda.instruction> s
 
 %%
 
 s :
-    term EOF
+    instruction EOF
       { $1 }
 
+instruction: 
+    STRINGV EQ term 
+        { TmAssigment ($1,$3) }
+    | term 
+        { TmEvaluation $1 }
+        
 term :
     appTerm
       { $1 }
@@ -69,4 +75,3 @@ atomicTerm :
             0 -> TmZero
           | n -> TmSucc (f (n-1))
         in f $1 }
-
