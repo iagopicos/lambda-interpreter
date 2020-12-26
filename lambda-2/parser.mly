@@ -18,6 +18,7 @@
 %token LPAREN
 %token RPAREN
 %token DOT
+%token COMA
 %token EQ
 %token EOF
 
@@ -46,6 +47,8 @@ term :
       { TmIf ($2, $4, $6) }
   | LAMBDA STRINGV DOT term
       { TmAbs ($2, $4) }
+   | term COMA term 
+      {TmTuple ($1, $2) }
   | LET STRINGV EQ term IN term
       { TmApp (TmAbs ($2, $6), $4) }
 
