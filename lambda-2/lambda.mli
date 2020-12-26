@@ -1,4 +1,3 @@
-
 type term =
     TmTrue
   | TmFalse
@@ -12,12 +11,19 @@ type term =
   | TmApp of term * term
 ;;
 
+type instruction = 
+    TmAssigment of string * term
+  | TmEvaluation of term
+;;
+
 val string_of_term : term -> string
 ;;
+
+val string_of_instruction : instruction -> string 
+;; 
 
 exception NoRuleApplies
 ;;
 
-val eval : term -> term
+val eval : (string, term) Hashtbl.t -> term -> term
 ;;
-
