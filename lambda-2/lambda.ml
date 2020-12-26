@@ -45,6 +45,8 @@ let rec string_of_term = function
       "(lambda " ^ s ^ ". " ^ string_of_term t ^ ")"
   | TmApp (t1, t2) ->
       "(" ^ string_of_term t1 ^ " " ^ string_of_term t2 ^ ")"
+  | TmTuple (t1,t2) -> 
+    "Tuple:{ " ^ string_of_term t1 ^ ", " ^ string_of_term t2 ^ "}"    
 ;;
 
 let rec string_of_instruction = function
@@ -84,6 +86,8 @@ let rec free_vars tm = match tm with
       ldif (free_vars t) [s]
   | TmApp (t1, t2) ->
       lunion (free_vars t1) (free_vars t2)
+  | TmTuple (t1, t2) ->
+        lunion (free_vars t1) (free_vars t2)
 ;;
 
 let rec fresh_name x l =
@@ -116,6 +120,8 @@ let rec subst x s tm = match tm with
                 TmAbs (z, subst x s (subst y (TmVar z) t))  
   | TmApp (t1, t2) ->
       TmApp (subst x s t1, subst x s t2)
+  | TmTuple(t1, t2) -> 
+      TmTuple(subst x s t1,subst x s t2)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -129,6 +135,7 @@ let rec isval tm = match tm with
   | TmFalse -> true
   | TmAbs _ -> true
   | t when isnumericval t -> true
+  (* | TmTuple(v1,v2)  when (isval v1 && isval v2) ->  true  *)
   | _ -> false
 ;;
 
@@ -196,7 +203,12 @@ let rec eval1 ctx tm = match tm with
   | TmApp (t1, t2) ->
       let t1' = eval1 ctx t1 in
       TmApp (t1', t2)
-
+  | TmTuple (v1,t2) when isval v1 -> 
+        let t2' = eval1 ctx t2 in 
+        TmTuple(v1, t2')
+  | TmTuple (t1,t2) -> 
+      let t1' = eval1 ctx t1 in 
+      TmTuple(t1',t2) 
   | _ ->
       raise NoRuleApplies
 ;;
