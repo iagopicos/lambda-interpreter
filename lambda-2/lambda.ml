@@ -46,7 +46,7 @@ let rec string_of_term = function
   | TmApp (t1, t2) ->
       "(" ^ string_of_term t1 ^ " " ^ string_of_term t2 ^ ")"
   | TmTuple (t1,t2) -> 
-    "Tuple:{ " ^ string_of_term t1 ^ ", " ^ string_of_term t2 ^ "}"    
+    "Tuple:{" ^ string_of_term t1 ^ ", " ^ string_of_term t2 ^ "}"    
 ;;
 
 let rec string_of_instruction = function
@@ -158,7 +158,8 @@ let rec eval1 ctx tm = match tm with
   | TmIf (t1, t2, t3) ->
       let t1' = eval1 ctx t1 in
       TmIf (t1', t2, t3)
-
+  | TmSucc (TmTuple(t1,t2)) -> 
+      TmTuple(TmSucc t1,TmSucc t2)
     (* E-Succ *)
   | TmSucc t1 ->
       let t1' = eval1 ctx t1 in
@@ -167,17 +168,18 @@ let rec eval1 ctx tm = match tm with
     (* E-PredZero *)
   | TmPred TmZero ->
       TmZero
-
     (* E-PredSucc *)
   | TmPred (TmSucc nv1) when isnumericval nv1 ->
       nv1
-
+  | TmPred (TmTuple(t1,t2)) -> 
+      TmTuple(TmPred t1,TmPred t2)
     (* E-Pred *)
   | TmPred t1 ->
       let t1' = eval1 ctx t1 in
       TmPred t1'
-
-    (* E-IszeroZero *)
+  | TmIsZero (TmTuple(t1,t2)) -> 
+        TmTuple(TmIsZero t1,TmIsZero t2)   
+      (* E-IszeroZero *)
   | TmIsZero TmZero ->
       TmTrue
 
@@ -193,7 +195,8 @@ let rec eval1 ctx tm = match tm with
     (* E-AppAbs *)
   | TmApp(TmAbs(x, t12), v2) when isval  v2 ->
       subst x v2 t12
-
+  | TmApp(tm,TmTuple(t1,t2)) ->
+      TmTuple(TmApp(tm,t1),TmApp(tm,t2))
     (* E-App2: evaluate argument before applying function *)
   | TmApp(v1, t2) when isval  v1 ->
       let t2' = eval1 ctx t2 in
