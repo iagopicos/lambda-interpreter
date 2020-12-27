@@ -13,6 +13,7 @@
 %token PRED
 %token ISZERO
 %token LET
+%token LETREC
 %token IN
 
 %token LPAREN
@@ -49,6 +50,8 @@ term :
       { TmAbs ($2, $4) }
   | LET STRINGV EQ term IN term
       { TmApp (TmAbs ($2, $6), $4) }
+  | LETREC STRINGV EQ term IN term
+      { TmRapp ($2,$4, $6) } 
   | appTerm COMA appTerm
      {TmTuple ($1, $3) }
 appTerm :

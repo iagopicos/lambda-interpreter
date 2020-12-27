@@ -10,6 +10,7 @@ type term =
   | TmVar of string
   | TmAbs of string * term
   | TmApp of term * term
+  | TmRapp of string * term * term 
   | TmTuple of term * term
 ;;
 
@@ -45,6 +46,8 @@ let rec string_of_term = function
       "(lambda " ^ s ^ ". " ^ string_of_term t ^ ")"
   | TmApp (t1, t2) ->
       "(" ^ string_of_term t1 ^ " " ^ string_of_term t2 ^ ")"
+  | TmRapp (t1, t2, t3) ->
+        "(" ^ t1 ^ " " ^ string_of_term t2 ^  string_of_term t3 ^ ")"     
   | TmTuple (t1,t2) -> 
     "Tuple:{" ^ string_of_term t1 ^ ", " ^ string_of_term t2 ^ "}"    
 ;;
@@ -86,6 +89,8 @@ let rec free_vars tm = match tm with
       ldif (free_vars t) [s]
   | TmApp (t1, t2) ->
       lunion (free_vars t1) (free_vars t2)
+  | TmRapp (t1, t2,t3) ->
+        lunion ((free_vars t2)) (free_vars t3)
   | TmTuple (t1, t2) ->
         lunion (free_vars t1) (free_vars t2)
 ;;
@@ -93,7 +98,6 @@ let rec free_vars tm = match tm with
 let rec fresh_name x l =
   if not (List.mem x l) then x else fresh_name (x ^ "'") l
 ;;
-    
 let rec subst x s tm = match tm with
     TmTrue ->
       TmTrue
@@ -120,10 +124,12 @@ let rec subst x s tm = match tm with
                 TmAbs (z, subst x s (subst y (TmVar z) t))  
   | TmApp (t1, t2) ->
       TmApp (subst x s t1, subst x s t2)
+  | TmRapp (t1, t2, t3) ->
+        subst t1 t2 t3 
   | TmTuple(t1, t2) -> 
       TmTuple(subst x s t1,subst x s t2)
 ;;
-
+  
 let rec isnumericval tm = match tm with
     TmZero -> true
   | TmSucc t -> isnumericval t
@@ -212,6 +218,11 @@ let rec eval1 ctx tm = match tm with
   | TmTuple (t1,t2) -> 
       let t1' = eval1 ctx t1 in 
       TmTuple(t1',t2) 
+  |TmRapp(t1,t2,v3) when isval v3 -> 
+    v3
+  | TmRapp (t1,t2,t3) -> 
+     TmRapp(t1,t2,(eval1 ctx (subst t1 t2 t3))) 
+      
   | _ ->
       raise NoRuleApplies
 ;;

@@ -9,6 +9,7 @@ type term =
   | TmVar of string
   | TmAbs of string * term
   | TmApp of term * term
+  | TmRapp of string * term * term 
   | TmTuple of term * term
 ;;
 
