@@ -19,7 +19,7 @@ let execute_ctx ctx inst = match inst with
 ;;
 
 
-let top_level_loop context =
+let top_level_loop () =
   print_endline "Evaluator of lambda expressions...";
   let rec loop context =
     print_string ">> ";
@@ -41,6 +41,6 @@ let top_level_loop context =
     loop context
   ;;
 
-top_level_loop context
+top_level_loop ()
 ;;
 
