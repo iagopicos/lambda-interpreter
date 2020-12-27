@@ -5,6 +5,7 @@ type ty =
     TyBool
   | TyNat
   | TyArr of ty * ty
+  | TyString 
 ;;
 
 type context =
@@ -23,6 +24,7 @@ type term =
   | TmAbs of string * ty * term
   | TmApp of term * term
   | TmLet of string * term * term
+  |TmString of term 
 ;;
 
 
@@ -50,6 +52,7 @@ let rec string_of_ty ty = match ty with
       "Nat"
   | TyArr (ty1, ty2) ->
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
+  | TyString -> "String"
 ;;
 
 exception Type_error of string
@@ -118,6 +121,8 @@ let rec typeof ctx tm = match tm with
       let tyT1 = typeof ctx t1 in
       let ctx' = addbinding ctx x tyT1 in
       typeof ctx' t2
+  | TmString (t1) -> 
+      TyString
 ;;
 
 
@@ -152,6 +157,7 @@ let rec string_of_term = function
       "(" ^ string_of_term t1 ^ " " ^ string_of_term t2 ^ ")"
   | TmLet (s, t1, t2) ->
       "let " ^ s ^ " = " ^ string_of_term t1 ^ " in " ^ string_of_term t2
+  | TmString (t1) -> "'" ^  string_of_term t1 ^ "'"
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -169,7 +175,9 @@ let rec free_vars tm = match tm with
       []
   | TmFalse ->
       []
-  | TmIf (t1, t2, t3) ->
+  |TmString _ -> 
+      []
+      | TmIf (t1, t2, t3) ->
       lunion (lunion (free_vars t1) (free_vars t2)) (free_vars t3)
   | TmZero ->
       []
@@ -198,6 +206,8 @@ let rec subst x s tm = match tm with
       TmTrue
   | TmFalse ->
       TmFalse
+  | TmString t1 -> 
+      TmString t1   
   | TmIf (t1, t2, t3) ->
       TmIf (subst x s t1, subst x s t2, subst x s t3)
   | TmZero ->
@@ -238,6 +248,7 @@ let rec isval tm = match tm with
     TmTrue  -> true
   | TmFalse -> true
   | TmAbs _ -> true
+  | TmString _ -> true
   | t when isnumericval t -> true
   | _ -> false
 ;;

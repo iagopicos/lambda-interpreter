@@ -16,9 +16,11 @@
 %token IN
 %token BOOL
 %token NAT
+%token STRING
 
 %token LPAREN
 %token RPAREN
+%token QUOTE
 %token DOT
 %token EQ
 %token COLON
@@ -46,6 +48,8 @@ term :
       { TmAbs ($2, $4, $6) }
   | LET STRINGV EQ term IN term
       { TmLet ($2, $4, $6) }
+  | QUOTE term QUOTE
+        {TmString ($2)}
 
 appTerm :
     atomicTerm
@@ -78,7 +82,7 @@ ty :
     atomicTy
       { $1 }
   | atomicTy ARROW ty
-      { TyArr ($1, $3) }
+      { TyArr ($1, $3) }   
 
 atomicTy :
     LPAREN ty RPAREN  
@@ -87,4 +91,6 @@ atomicTy :
       { TyBool }
   | NAT
       { TyNat }
+  | STRING
+      { TyString }
 
